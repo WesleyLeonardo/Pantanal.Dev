@@ -4,6 +4,56 @@ import requests
 from bs4 import BeautifulSoup
 from unidecode import unidecode
 
+from transformers import BertTokenizer, BertForSequenceClassification
+import torch
+
+
+from sklearn.metrics import accuracy_score, precision_score
+
+
+exemplos_treinamento = [
+    {'texto': 'Exemplo de texto 1', 'sentimento': 1},
+    {'texto': 'Exemplo de texto 2', 'sentimento': 0},
+    # Adicione mais exemplos de treinamento aqui
+]
+
+def criar_dataset_manual(exemplos):
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+    input_ids = []
+    attention_masks = []
+    labels = []
+
+    for exemplo in exemplos:
+        texto = exemplo['texto']
+        sentimento = exemplo['sentimento']
+
+        encoding = tokenizer.encode_plus(
+            texto,
+            add_special_tokens=True,
+            max_length=512,
+            padding='max_length',
+            truncation=True,
+            return_tensors='pt'
+        )
+
+        input_ids.append(encoding['input_ids'].squeeze())
+        attention_masks.append(encoding['attention_mask'].squeeze())
+        labels.append(sentimento)
+
+    dataset = torch.utils.data.TensorDataset(
+        torch.stack(input_ids),
+        torch.stack(attention_masks),
+        torch.tensor(labels)
+    )
+
+    return dataset
+
+# Carregar o tokenizer e o modelo BERT pré-treinado para análise de sentimento
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
+
+dataset_treinamento = criar_dataset_manual(exemplos_treinamento)
 
 app = Flask(__name__)
 
@@ -77,6 +127,9 @@ def obter_noticias():
         links.append(link_noticia)
 
     noticias_completas = []
+    classes_verdadeiras = []
+    previsoes_modelo = []
+
     for link in links:
         url_noticia = f"https:{link}"
         resposta_noticia = requests.get(url_noticia)
@@ -110,10 +163,63 @@ def obter_noticias():
             texto = ''
             for paragrafo in texto_noticia:
               texto += paragrafo.text
-            noticias_completas.append({'titulo': titulo, 'subtitulo': subtitulo, 'noticia': texto, 'capital': capital, 'ano': ano})
+              
+            
+             # Realizar análise de sentimento usando o modelo BERT
+            tokens = tokenizer.encode_plus(
+                texto,
+                add_special_tokens=True,
+                padding='longest',
+                truncation=True,
+                max_length=512,  # Definir o comprimento máximo da sequência
+                return_tensors='pt'
+            )
+            outputs = model(**tokens)
+            predicoes = torch.softmax(outputs.logits, dim=1)
+        
+            # Obter a classe de sentimento com a maior probabilidade
+            classe_sentimento = torch.argmax(predicoes).item()
+            
+        
+            # Mapear a classe de sentimento para uma descrição
+            sentimento = "positivo" if classe_sentimento == 1 else "negativo"
+        
+            noticias_completas.append({'titulo': titulo, 'subtitulo': subtitulo, 'noticia': texto, 'capital': capital, 'ano': ano, 'sentimento': sentimento})
+            #classes_verdadeiras.append(classe_sentimento)
+            previsoes_modelo.append(classe_sentimento)
+
+# Calcular a acurácia e precisão
+    classes_verdadeiras = [
+        0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0
+    ]
+    acuracia = accuracy_score(classes_verdadeiras, previsoes_modelo)
+    precisao = precision_score(classes_verdadeiras, previsoes_modelo)
+
+    # Retornar as notícias, acurácia e precisão como resposta da API
+    return jsonify({
+        'noticias': noticias_completas,
+        'acuracia': acuracia,
+        'precisao': precisao,
+    })
+
+            
+            
+            
+            
+            
+            #outputs = model(**tokens)
+            #predicoes = torch.softmax(outputs.logits, dim=1)
+            
+            # Obter a classe de sentimento com a maior probabilidade
+            #classe_sentimento = torch.argmax(predicoes).item()
+            
+            # Mapear a classe de sentimento para uma descrição
+            #sentimento = "positivo" if classe_sentimento == 1 else "negativo"
+            
+            #noticias_completas.append({'titulo': titulo, 'subtitulo': subtitulo, 'noticia': texto, 'capital': capital, 'ano': ano, 'sentimento': sentimento})
     
     # Retornar as notícias como resposta da API
-    return jsonify(noticias_completas)
+    #return jsonify(noticias_completas)
 
 if __name__ == '__main__':
     app.run()
