@@ -4,12 +4,6 @@ import requests
 from bs4 import BeautifulSoup
 from unidecode import unidecode
 
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
 from transformers import BertTokenizer, BertForSequenceClassification, AdamW
 import torch
 from torch.utils.data import DataLoader
@@ -128,161 +122,129 @@ def obter_noticias():
     if capital_formatada not in capitais_do_brasil:
         return jsonify({'error': 'Capital inválida. Digite uma capital do Brasil.'}), 400
     
-    # Configurando o serviço do navegador Chrome
-    chrome_path = "Caminho/para/o/executável/do/chrome"
-    chrome_service = ChromeService(executable_path=chrome_path)
-
-    # Configurando as opções do navegador Chrome
-    chrome_options = webdriver.ChromeOptions()
-    # Adicione quaisquer opções extras do Chrome, se necessário
-
-    # Criando a instância do navegador Chrome
-    driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
-    
-    try:
-        # Construindo a URL da busca no G1
-        url = f"https://g1.globo.com/busca/?q={capital}"
+    # Construindo a URL da busca no G1
+    url = f"https://g1.globo.com/busca/?q={capital}"
         
-         # Abrindo a página de busca no navegador Chrome
-        driver.get(url)
+    batch_size = 16
+    epochs = 5
+    learning_rate = 2e-5
         
-        # Esperando até que as notícias sejam carregadas dinamicamente
-        wait = WebDriverWait(driver, 10)
-        wait.until(EC.presence_of_element_located((By.CLASS_NAME, "widget--info__text-container")))
+    # Criar o dataloader para o dataset de treinamento manual
+    train_loader = DataLoader(dataset_treinamento, batch_size=batch_size, shuffle=True)
         
-        conteudo = driver.page_source
+    # Definir o otimizador e a função de perda
+    optimizer = AdamW(model.parameters(), lr=learning_rate)
+    loss_fn = torch.nn.CrossEntropyLoss()
         
-        batch_size = 16
-        epochs = 5
-        learning_rate = 2e-5
-        
-        # Criar o dataloader para o dataset de treinamento manual
-        train_loader = DataLoader(dataset_treinamento, batch_size=batch_size, shuffle=True)
-        
-        # Definir o otimizador e a função de perda
-        optimizer = AdamW(model.parameters(), lr=learning_rate)
-        loss_fn = torch.nn.CrossEntropyLoss()
-        
-        # Função de treinamento
-        def train(model, dataloader, optimizer, loss_fn):
-            model.train()
-            total_loss = 0.0
+    # Função de treinamento
+    def train(model, dataloader, optimizer, loss_fn):
+        model.train()
+        total_loss = 0.0
             
-            for batch in dataloader:
-                optimizer.zero_grad()
-                input_ids = batch[0].to(device)
-                attention_mask = batch[1].to(device)
-                labels = batch[2].to(device)
+        for batch in dataloader:
+            optimizer.zero_grad()
+            input_ids = batch[0].to(device)
+            attention_mask = batch[1].to(device)
+            labels = batch[2].to(device)
                 
-                outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
-                loss = outputs.loss
-                total_loss += loss.item()
+            outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
+            loss = outputs.loss
+            total_loss += loss.item()
                 
-                loss.backward()
-                optimizer.step()
+            loss.backward()
+            optimizer.step()
                 
-            avg_loss = total_loss / len(dataloader)
-            return avg_loss
+        avg_loss = total_loss / len(dataloader)
+        return avg_loss
         
-        # Loop de treinamento
-        for epoch in range(epochs):
-            loss = train(model, train_loader, optimizer, loss_fn)
-            print(f'Epoch {epoch+1}/{epochs}, Loss: {loss}')
+    # Loop de treinamento
+    for epoch in range(epochs):
+        loss = train(model, train_loader, optimizer, loss_fn)
+        print(f'Epoch {epoch+1}/{epochs}, Loss: {loss}')
 
-        # Realizando a requisição HTTP
-        #resposta = requests.get(url)
+    # Realizando a requisição HTTP
+    resposta = requests.get(url)
 
-        # Verificando se a requisição foi bem-sucedida
-        #if resposta.status_code != 200:
-         #   return jsonify({'error': 'Não foi possível obter as notícias.'}), 500
+    # Verificando se a requisição foi bem-sucedida
+    if resposta.status_code != 200:
+        return jsonify({'error': 'Não foi possível obter as notícias.'}), 500
 
-        # Obtendo o conteúdo da página
-        #conteudo = resposta.content
+    # Obtendo o conteúdo da página
+    conteudo = resposta.content
 
-        # Criando o objeto BeautifulSoup
-        soup = BeautifulSoup(conteudo, "html.parser")
+    # Criando o objeto BeautifulSoup
+    soup = BeautifulSoup(conteudo, "html.parser")
 
-        # Encontrando as notícias na página
-        noticias = soup.find_all("div", class_="widget--info__text-container")
+    # Encontrando as notícias na página
+    noticias = soup.find_all("div", class_="widget--info__text-container")
 
-        # Extraindo os títulos das notícias e exibindo-os
-        links = []
-        for noticia in noticias:
-            link_noticia = noticia.find("a")["href"]
-            links.append(link_noticia)
+    # Extraindo os títulos das notícias e exibindo-os
+    links = []
+    for noticia in noticias:
+        link_noticia = noticia.find("a")["href"]
+        links.append(link_noticia)
 
-        noticias_completas = []
+    noticias_completas = []
         
-        def classificar_sentimento(texto):
-            tokens = tokenizer.encode_plus(
-                texto,
-                add_special_tokens=True,
-                max_length=512,
-                padding='max_length',
-                truncation=True,
-                return_tensors='pt'
-            )
+    def classificar_sentimento(texto):
+        tokens = tokenizer.encode_plus(
+            texto,
+            add_special_tokens=True,
+            max_length=512,
+            padding='max_length',
+            truncation=True,
+            return_tensors='pt'
+        )
 
-            input_ids = tokens['input_ids'].to(device)
-            attention_mask = tokens['attention_mask'].to(device)
+        input_ids = tokens['input_ids'].to(device)
+        attention_mask = tokens['attention_mask'].to(device)
 
-            outputs = model(input_ids, attention_mask=attention_mask)
-            logits = outputs.logits
-            predicoes = torch.softmax(logits, dim=1)
-            classe_sentimento = torch.argmax(predicoes).item()
+        outputs = model(input_ids, attention_mask=attention_mask)
+        logits = outputs.logits
+        predicoes = torch.softmax(logits, dim=1)
+        classe_sentimento = torch.argmax(predicoes).item()
 
-            sentimento = "positivo" if classe_sentimento == 1 else "negativo"
-            return sentimento
+        sentimento = "positivo" if classe_sentimento == 1 else "negativo"
+        return sentimento
 
-        for link in links:
+    for link in links:
             
-            driver.get(f"https:{link}")
+        url_noticia = f"https:{link}"
+        resposta_noticia = requests.get(url_noticia)
 
-            # Esperando até que o título da notícia seja carregado
-            wait.until(EC.presence_of_element_located((By.CLASS_NAME, "content-head__title")))
+        if resposta_noticia.status_code != 200:
+            return jsonify({'error': 'Não foi possível obter as notícias.'}), 500
 
-            # Obtendo o conteúdo da página da notícia
-            conteudo_noticia = driver.page_source
+        conteudo_noticia = resposta_noticia.content
+        soup_noticia = BeautifulSoup(conteudo_noticia, 'html.parser')
             
-            #url_noticia = f"https:{link}"
-            #resposta_noticia = requests.get(url_noticia)
+        script = soup_noticia.find('script').string
+        start_index = script.find('"') + 1
+        end_index = script.rfind('"')
+        link_certo_noticia = script[start_index:end_index]
 
-            #if resposta_noticia.status_code != 200:
-             #   return jsonify({'error': 'Não foi possível obter as notícias.'}), 500
+        ano = link_certo_noticia.split('/')[-4]
 
-            #conteudo_noticia = resposta_noticia.content
-            soup_noticia = BeautifulSoup(conteudo_noticia, 'html.parser')
-            script = soup_noticia.find('script').string
-            start_index = script.find('"') + 1
-            end_index = script.rfind('"')
-            link_certo_noticia = script[start_index:end_index]
+        resposta_certa_noticia = requests.get(link_certo_noticia)
 
-            ano = link_certo_noticia.split('/')[-4]
+        if resposta_certa_noticia.status_code != 200:
+            return jsonify({'error': 'Não foi possível obter as notícias.'}), 500
 
-            resposta_certa_noticia = requests.get(link_certo_noticia)
+        conteudo_certo_noticia = resposta_certa_noticia.content
+        soup_certo_noticia = BeautifulSoup(conteudo_certo_noticia, 'html.parser')
 
-            if resposta_certa_noticia.status_code != 200:
-                return jsonify({'error': 'Não foi possível obter as notícias.'}), 500
-
-            conteudo_certo_noticia = resposta_certa_noticia.content
-            soup_certo_noticia = BeautifulSoup(conteudo_certo_noticia, 'html.parser')
-
-            titulo_noticia = soup_certo_noticia.find("h1", class_="content-head__title")
-            if titulo_noticia is not None:
-                titulo = titulo_noticia.text
-                subtitulo_noticia = soup_certo_noticia.find("h2", class_="content-head__subtitle")
-                subtitulo = subtitulo_noticia.text
-                texto_noticia = soup_certo_noticia.findAll("p", class_="content-text__container")
-                texto = " ".join([paragrafo.text.strip() for paragrafo in texto_noticia])
+        titulo_noticia = soup_certo_noticia.find("h1", class_="content-head__title")
+        if titulo_noticia is not None:
+            titulo = titulo_noticia.text
+            subtitulo_noticia = soup_certo_noticia.find("h2", class_="content-head__subtitle")
+            subtitulo = subtitulo_noticia.text
+            texto_noticia = soup_certo_noticia.findAll("p", class_="content-text__container")
+            texto = " ".join([paragrafo.text.strip() for paragrafo in texto_noticia])
                 
-                sentimento = classificar_sentimento(texto)
-                noticias_completas.append({'titulo': titulo, 'subtitulo': subtitulo, 'noticia': texto, 'capital': capital, 'ano': ano, 'sentimento': sentimento})
+            sentimento = classificar_sentimento(texto)
+            noticias_completas.append({'titulo': titulo, 'subtitulo': subtitulo, 'noticia': texto, 'capital': capital, 'ano': ano, 'sentimento': sentimento})
             
-        return jsonify(noticias_completas)
-    
-    finally:
-        # Fechando o navegador Chrome
-        driver.quit()
+    return jsonify(noticias_completas)
 
 if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
