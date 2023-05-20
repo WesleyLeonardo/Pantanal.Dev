@@ -118,12 +118,11 @@ function initMap() {
         ],
     });
 
-    // Definir limite de cores para o heatmap
     heatmap.setOptions({
         opacity: 0.8,
         dissipating: true,
         maxIntensity: 100,
-        radius: 300,
+        radius: 50,
     });
 
     //Card de pesquisa de cidades
