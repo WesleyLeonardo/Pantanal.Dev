@@ -31,8 +31,8 @@ def obter_tabela():
     data = []
     for row in rows:
         d = {
-            'sentimento': row[0],
-            'cidade': row[1],
+            'cidade': row[0],
+            'sentimento': row[1],
             'data_hora_requisicao': str(row[2])
         }
         data.append(d)
