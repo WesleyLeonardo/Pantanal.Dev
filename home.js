@@ -47,8 +47,6 @@ function initMap() {
     //Dados do Heatmap
     var heatmapData = [
         //Aracaju - Sergipe
-        //Pega o weight do banco de dados, da coluna sentimento
-
         {location: new google.maps.LatLng(-10.91, -37.07), weight: null},
         //Belém - Pará
         {location: new google.maps.LatLng(-1.46, -48.48), weight: null},
@@ -160,7 +158,7 @@ function initMap() {
             map.fitBounds(place.geometry.viewport);
         } else {
             map.setCenter(place.geometry.location);
-            map.setZoom(13);
+            map.setZoom(10);
         }
 
         marker.setPosition(place.geometry.location);
@@ -171,7 +169,9 @@ function initMap() {
         infowindow.open(map, marker);
     });
 
-    window.initMap = initMap;
+
 }
+
+window.initMap = initMap;
 
 
