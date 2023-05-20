@@ -8,6 +8,8 @@ button {
     font-weight: bolder;
     border-radius: 3px;
 }
+
+
 #map {
     height: 100vh;
 }

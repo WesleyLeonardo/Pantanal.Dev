@@ -44,63 +44,66 @@ function initMap() {
     }
 
 
+
     //Dados do Heatmap
     var heatmapData = [
         //Aracaju - Sergipe
-        {location: new google.maps.LatLng(-10.91, -37.07), weight: null},
+        {location: new google.maps.LatLng(-10.91, -37.07), weight: Math.random()*100},
         //Belém - Pará
-        {location: new google.maps.LatLng(-1.46, -48.48), weight: null},
+        {location: new google.maps.LatLng(-1.46, -48.48), weight: Math.random()*100},
         //Belo Horizonte - Minas Gerais
-        {location: new google.maps.LatLng(-19.92, -43.94), weight: null},
+        {location: new google.maps.LatLng(-19.92, -43.94), weight: Math.random()*100},
         //Boa Vista - Roraima
-        {location: new google.maps.LatLng(2.82, -60.67), weight: null},
+        {location: new google.maps.LatLng(2.82, -60.67), weight: Math.random()*100},
         //Brasília
-        {location: new google.maps.LatLng(-15.78, -47.92), weight: null},
+        {location: new google.maps.LatLng(-15.78, -47.92), weight: Math.random()*100},
         //Campo Grande
-        {location: new google.maps.LatLng(-20.481389, -54.616111), weight: null},
+        {location: new google.maps.LatLng(-20.481389, -54.616111), weight: Math.random()*100},
         //Cuiabá - Mato Grosso
-        {location: new google.maps.LatLng(-15.6, -56.1), weight: null},
+        {location: new google.maps.LatLng(-15.6, -56.1), weight: Math.random()*100},
         //Curitiba - Paraná
-        {location: new google.maps.LatLng(-25.42, -49.29), weight: null},
+        {location: new google.maps.LatLng(-25.42, -49.29), weight: Math.random()*100},
         //Florianópolis - Santa Catarina
-        {location: new google.maps.LatLng(-27.59, -48.55), weight: null},
+        {location: new google.maps.LatLng(-27.59, -48.55), weight: Math.random()*100},
         //Fortaleza - Ceará
-        {location: new google.maps.LatLng(-3.71, -38.54), weight: null},
+        {location: new google.maps.LatLng(-3.71, -38.54), weight: Math.random()*100},
         //Goiânia - Goiás
-        {location: new google.maps.LatLng(-16.68, -49.25), weight: null},
+        {location: new google.maps.LatLng(-16.68, -49.25), weight: Math.random()*100},
         //João Pessoa - Paraíba
-        {location: new google.maps.LatLng(-7.12, -34.86), weight: null},
+        {location: new google.maps.LatLng(-7.12, -34.86), weight: Math.random()*100},
         //Macapá - Amapá
-        {location: new google.maps.LatLng(0.035, -51.07), weight: null},
+        {location: new google.maps.LatLng(0.035, -51.07), weight: Math.random()*100},
         //Maceió - Alagoas
-        {location: new google.maps.LatLng(-9.66, -35.73), weight: null},
+        {location: new google.maps.LatLng(-9.66, -35.73), weight: Math.random()*100},
         //Manaus - Amazonas
-        {location: new google.maps.LatLng(-3.11, -60.02), weight: null},
+        {location: new google.maps.LatLng(-3.11, -60.02), weight: Math.random()*100},
         //Natal - Rio Grande do Norte
-        {location: new google.maps.LatLng(-5.81, -35.21), weight: null},
+        {location: new google.maps.LatLng(-5.81, -35.21), weight: Math.random()*100},
         //Palmas - Tocantins
-        {location: new google.maps.LatLng(-10.24, -48.35), weight: null},
+        {location: new google.maps.LatLng(-10.24, -48.35), weight: Math.random()*100},
         //Porto Alegre - Rio Grande do Sul
-        {location: new google.maps.LatLng(-30.03, -51.23), weight: null},
+        {location: new google.maps.LatLng(-30.03, -51.23), weight: Math.random()*100},
         //Porto Velho - Rondônia
-        {location: new google.maps.LatLng(-8.76, -63.9), weight: null},
+        {location: new google.maps.LatLng(-8.76, -63.9), weight: Math.random()*100},
         //Recife - Pernambuco
-        {location: new google.maps.LatLng(-8.05, -34.9), weight: null},
+        {location: new google.maps.LatLng(-8.05, -34.9), weight: Math.random()*100},
         //Rio Branco - Acre
-        {location: new google.maps.LatLng(-9.97, -67.81), weight: null},
+        {location: new google.maps.LatLng(-9.97, -67.81), weight: Math.random()*100},
         //Rio de Janeiro
-        {location: new google.maps.LatLng(-22.91, -43.2), weight: null},
+        {location: new google.maps.LatLng(-22.91, -43.2), weight: Math.random()*100},
         //Salvador - Bahia
-        {location: new google.maps.LatLng(-12.97, -38.51), weight: null},
+        {location: new google.maps.LatLng(-12.97, -38.51), weight: Math.random()*100},
         //São Luís - Maranhão
-        {location: new google.maps.LatLng(-2.53, -44.3), weight: null},
+        {location: new google.maps.LatLng(-2.53, -44.3), weight: Math.random()*100},
         //São Paulo
-        {location: new google.maps.LatLng(-23.55, -46.64), weight: null},
+        {location: new google.maps.LatLng(-23.55, -46.64), weight: Math.random()*100},
         //Teresina - Piauí
-        {location: new google.maps.LatLng(-5.09, -42.8), weight: null},
+        {location: new google.maps.LatLng(-5.09, -42.8), weight: Math.random()*100},
         //Vitória - Espírito Santo
-        {location: new google.maps.LatLng(-20.32, -40.34), weight: null},
+        {location: new google.maps.LatLng(-20.32, -40.34), weight: Math.random()*100},
     ];
+
+    console.log(heatmapData);
 
     // Configurações do heatmap
     var heatmap = new google.maps.visualization.HeatmapLayer({
@@ -117,9 +120,10 @@ function initMap() {
 
     // Definir limite de cores para o heatmap
     heatmap.setOptions({
+        opacity: 0.8,
         dissipating: true,
         maxIntensity: 100,
-        radius: 50,
+        radius: 300,
     });
 
     //Card de pesquisa de cidades
