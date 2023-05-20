@@ -28,7 +28,7 @@ function initMap() {
                 }
             );
         } else {
-            // Browser doesn't support Geolocation
+            // Caso não suporte:
             handleLocationError(false, infoWindow, map.getCenter());
         }
     });
