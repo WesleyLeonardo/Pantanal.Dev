@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <link rel="stylesheet" href="style.css">
+    <title>Heatmap</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+
+    <link rel="stylesheet" type="text/css" href="./style.css"/>
+    <script type="module" src="./home.js"></script>
+</head>
+
+<body>
+
+<div class="pac-card" id="pac-card">
+    <div>
+        <div id="title">Pesquisar Cidade</div>
+
+        <br/>
+    </div>
+    <div id="pac-container">
+        <input id="pac-input" type="text" placeholder="Insira a localização"/>
+    </div>
+</div>
+
+<div id="map"></div>
+
+<div id="infowindow-content">
+    <span id="place-name" class="title"></span><br/>
+    <span id="place-address"></span>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4rctClC6S5WDEPib1F111emo9meGHeHI&callback=initMap&libraries=places,visualization&v=weekly"
+        async defer></script>
+
+</body>
+</html>
+
+
+
+
+
+
