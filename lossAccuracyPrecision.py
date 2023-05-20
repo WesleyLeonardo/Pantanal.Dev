@@ -4,8 +4,6 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, precision_score
 
 import treinos
-from transformers import BertTokenizer, BertForSequenceClassification
-import torch
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
 model = BertForSequenceClassification.from_pretrained('bert-base-multilingual-cased')
